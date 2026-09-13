@@ -1,13 +1,14 @@
 /**
  * Warehouse integration against Acme Shipping API v1
  */
-export type ShipmentStatus = "queued" | "in_transit" | "delivered";
+export type ShipmentStatus = "pending" | "in_transit" | "delivered";
 
 export interface CreateShipmentRequest {
   originZip: string;
   destZip: string;
   weightKg: number;
-  carrier: "ups" | "fedex" | "dhl";
+  carrier: "ups" | "fedex" | "dhl" | "usps";
+    recipientEmail: string;
 }
 
 export interface ShipmentRecord {
@@ -15,14 +16,17 @@ export interface ShipmentRecord {
   status: ShipmentStatus;
   carrier: string;
   weightKg: number;
+    estimatedDelivery: string;
 }
 
-const SHIPPING_BASE = "https://api.acme-shipping.com/v1";
+const SHIPPING_BASE = "https://api.acme-shipping.com/v2";
 
 export async function submitShipment(request: CreateShipmentRequest): Promise<ShipmentRecord> {
   const response = await fetch(`${SHIPPING_BASE}/shipments`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json",
+        recipientEmail: ""
+    },
     body: JSON.stringify(request),
   });
 
@@ -34,7 +38,7 @@ export async function submitShipment(request: CreateShipmentRequest): Promise<Sh
 }
 
 export function isShipmentQueued(record: ShipmentRecord): boolean {
-  return record.status === "queued";
+  return record.status === "pending";
 }
 
 export function isShipmentDelivered(record: ShipmentRecord): boolean {
