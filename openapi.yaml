@@ -1,10 +1,10 @@
 openapi: 3.0.3
 info:
   title: Payments API
-  version: 1.2.0
-  description: Checkout and refunds for merchant integrations
+  version: 2.0.0
+  description: Checkout and refunds for merchant integrations — breaking release
 servers:
-  - url: https://api.acme-payments.com/v1
+  - url: https://api.acme-payments.com/v2
 paths:
   /charges:
     post:
@@ -65,17 +65,25 @@ components:
         - amount
         - currency
         - customerId
+        - idempotencyKey
       properties:
         amount:
           type: integer
-          description: Amount in cents
+          description: Amount in minor units
         currency:
           type: string
-          enum: [usd, eur, gbp]
+          enum: [usd, eur, gbp, inr]
         customerId:
           type: string
+        idempotencyKey:
+          type: string
+          description: Required unique key to prevent duplicate charges
         description:
           type: string
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
     Charge:
       type: object
       required:
@@ -83,6 +91,7 @@ components:
         - amount
         - currency
         - status
+        - createdAt
       properties:
         id:
           type: string
@@ -92,19 +101,26 @@ components:
           type: string
         status:
           type: string
-          enum: [pending, succeeded, failed]
+          enum: [processing, succeeded, declined, canceled]
         customerId:
           type: string
+        createdAt:
+          type: string
+          format: date-time
     CreateRefundRequest:
       type: object
       required:
         - chargeId
         - amount
+        - reason
       properties:
         chargeId:
           type: string
         amount:
           type: integer
+        reason:
+          type: string
+          enum: [requested_by_customer, duplicate, fraudulent]
     Refund:
       type: object
       required:
@@ -112,6 +128,7 @@ components:
         - chargeId
         - amount
         - status
+        - reason
       properties:
         id:
           type: string
@@ -121,4 +138,6 @@ components:
           type: integer
         status:
           type: string
-          enum: [pending, succeeded, failed]
+          enum: [processing, succeeded, failed]
+        reason:
+          type: string
